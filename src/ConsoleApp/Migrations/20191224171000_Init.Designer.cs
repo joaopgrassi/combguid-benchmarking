@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleApp.Migrations
 {
     [DbContext(typeof(CombGuidDbContext))]
-    [Migration("20191224165413_Init")]
+    [Migration("20191224171000_Init")]
     partial class Init
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -46,10 +46,13 @@ namespace ConsoleApp.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NewSequentialId()");
 
                     b.Property<Guid>("AnotherId")
-                        .HasColumnType("uniqueidentifier");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NewSequentialId()");
 
                     b.Property<string>("Value")
                         .IsRequired()

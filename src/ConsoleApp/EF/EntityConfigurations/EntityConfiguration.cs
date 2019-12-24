@@ -14,6 +14,14 @@ namespace ConsoleApp.EF.EntityConfigurations
 
     public class TableWithNewSequentialIdAsDefaultConfiguration : BaseBenchmarkEntityConfiguration<TableWithNewSequentialIdAsDefault>
     {
+        public override void Configure(EntityTypeBuilder<TableWithNewSequentialIdAsDefault> builder)
+        {
+            base.Configure(builder);
+
+            // Configures the columns with the default SQL Sequential Id Generation
+            builder.Property(p => p.Id).HasDefaultValueSql("NewSequentialId()");
+            builder.Property(p => p.AnotherId).HasDefaultValueSql("NewSequentialId()");
+        }
     }
 
     public class TableWithSpanCustomGuidCombConfiguration : BaseBenchmarkEntityConfiguration<TableWithSpanCustomGuidComb>

@@ -24,8 +24,8 @@ namespace ConsoleApp.Migrations
                 name: "TableWithNewSequentialIdAsDefault",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(nullable: false),
-                    AnotherId = table.Column<Guid>(nullable: false),
+                    Id = table.Column<Guid>(nullable: false, defaultValueSql: "NewSequentialId()"),
+                    AnotherId = table.Column<Guid>(nullable: false, defaultValueSql: "NewSequentialId()"),
                     Value = table.Column<string>(maxLength: 400, nullable: false)
                 },
                 constraints: table =>

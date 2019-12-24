@@ -44,10 +44,13 @@ namespace ConsoleApp.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NewSequentialId()");
 
                     b.Property<Guid>("AnotherId")
-                        .HasColumnType("uniqueidentifier");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasDefaultValueSql("NewSequentialId()");
 
                     b.Property<string>("Value")
                         .IsRequired()
