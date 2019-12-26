@@ -44,6 +44,11 @@ namespace ConsoleApp
             await InsertDataToTestTable<TableWithSpanCustomGuidComb>(CombGuid.NewCombGuid);
             Console.WriteLine($"Completed in {(DateTime.Now - startTime).TotalSeconds}s");
 
+            Console.WriteLine($"Starting Option 5");
+            startTime = DateTime.Now;
+            await InsertDataToTestTable<TableWithCustomGuidInSql>();
+            Console.WriteLine($"Completed in {(DateTime.Now - startTime).TotalSeconds}s");
+
             Console.ReadLine();
         }
 

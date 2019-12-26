@@ -10,6 +10,7 @@ namespace ConsoleApp.EF
         public DbSet<TableWithNewSequentialIdAsDefault> TableWithNewSequentialIdAsDefault { get; set; }
         public DbSet<TableWithExtendedUuidCreateSequential> TableWithExtendedUuidCreateSequential { get; set; }
         public DbSet<TableWithSpanCustomGuidComb> TableWithSpanCustomGuidComb { get; set; }
+        public DbSet<TableWithCustomGuidInSql> TableWithCustomGuidInSql { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
