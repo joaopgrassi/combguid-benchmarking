@@ -49,6 +49,11 @@ namespace ConsoleApp
             await InsertDataToTestTable<TableWithCustomGuidInSql>();
             Console.WriteLine($"Completed in {(DateTime.Now - startTime).TotalSeconds}s");
 
+            Console.WriteLine($"Starting Option 6");
+            startTime = DateTime.Now;
+            await InsertDataToTestTable<TableWithVbCombGuid>(VBGuidApp.VbCombGuid.GetNewID);
+            Console.WriteLine($"Completed in {(DateTime.Now - startTime).TotalSeconds}s");
+
             Console.ReadLine();
         }
 

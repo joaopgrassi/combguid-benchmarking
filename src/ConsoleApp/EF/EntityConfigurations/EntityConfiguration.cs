@@ -40,6 +40,10 @@ namespace ConsoleApp.EF.EntityConfigurations
         }
     }
 
+    public class TableWithVbCombGuidConfiguration : BaseBenchmarkEntityConfiguration<TableWithVbCombGuid>
+    {
+    }
+
     public class BaseBenchmarkEntityConfiguration<TEntity> : IEntityTypeConfiguration<TEntity>
         where TEntity : BaseBenchmarkEntity
     {

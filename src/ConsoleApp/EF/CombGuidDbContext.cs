@@ -11,6 +11,7 @@ namespace ConsoleApp.EF
         public DbSet<TableWithExtendedUuidCreateSequential> TableWithExtendedUuidCreateSequential { get; set; }
         public DbSet<TableWithSpanCustomGuidComb> TableWithSpanCustomGuidComb { get; set; }
         public DbSet<TableWithCustomGuidInSql> TableWithCustomGuidInSql { get; set; }
+        public DbSet<TableWithVbCombGuid> TableWithVbCombGuid { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
