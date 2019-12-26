@@ -9,7 +9,9 @@ In case you are not familiar with the premise of the issue, using `Guid` as prim
 
 This experimentation is completely based on this article: [Benchmarking Index Fragmentation With Popular Sequential GUID Algorithms](http://microsoftprogrammers.jebarson.com/benchmarking-index-fragmentation-with-popular-sequential-guid-algorithms/).
 
-The article compares the index fragmentation of a custom Comb Guid implementation taken from NHibernate's codebase (https://stackoverflow.com/a/25472825/2689390). This implementation is quite popular online and the author wanted to see how it performs regarding SQL index fragmentation. I dug into the code of several databases drivers for .NET and many of them seem to be using the same algorithm.
+The article compares the index fragmentation of a custom Comb Guid implementation taken from NHibernate's codebase (https://stackoverflow.com/a/25472825/2689390). This implementation is quite popular online and the author wanted to see how it performs compared to other methods of Guid generation regarding SQL index fragmentation. I dug into the code of several databases drivers for .NET and many of them seem to be using the same algorithm. The article shows that the NHibernate's Guid generation results are very bad reaching 91.66% index fragmentation for clustered indexes.
+
+This repo contain a different Comb Guid implementation and the goal is to run the same type of benchmark as in the article so we can find out how good or bad it performs. 
 
 ## Results (Localdb for now)
 
