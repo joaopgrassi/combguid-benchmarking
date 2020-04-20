@@ -3,25 +3,51 @@ A simple app to benchmark the index fragmentation of a custom Comb Guid implemen
 
 ## Background
 
-In case you are not familiar with the premise of the issue, using `Guid` as primary keys for database (here we're talking about SQL) can cause problems in your database. The decision to use it must not be made from thin air. There are many articles and debates online about it, but this one is quite good: [GUIDs as PRIMARY KEYs and/or the clustering key](https://www.sqlskills.com/blogs/kimberly/guids-as-primary-keys-andor-the-clustering-key/)
+In case you are not familiar with the premise of the issue, using `Guid` as primary keys for database (here we're talking about SQL) can cause many issues in your database. A quick DuckDuckGo search can show you how bad it can get.
 
 ## Premise
 
-This experimentation is completely based on this article: [Benchmarking Index Fragmentation With Popular Sequential GUID Algorithms](http://microsoftprogrammers.jebarson.com/benchmarking-index-fragmentation-with-popular-sequential-guid-algorithms/).
+This experimentation is based on this article: [Benchmarking Index Fragmentation With Popular Sequential GUID Algorithms](http://microsoftprogrammers.jebarson.com/benchmarking-index-fragmentation-with-popular-sequential-guid-algorithms/).
 
 The article compares the index fragmentation of a custom Comb Guid implementation taken from NHibernate's codebase (https://stackoverflow.com/a/25472825/2689390). This implementation is quite popular online and the author wanted to see how it performs compared to other methods of Guid generation regarding SQL index fragmentation. I dug into the code of several databases drivers for .NET and many of them seem to be using the same algorithm. The article shows that the NHibernate's Guid generation results are very bad reaching 91.66% index fragmentation for clustered indexes.
 
-This repo contain a different Comb Guid implementation and the goal is to run the same type of benchmark as in the article so we can find out how good or bad it performs. 
+The problem with the article is that the GUIDs are generated very fast, thus creating the same Date/Time portion for all the Ids, resulting in the same problem where SQL cannot order things. In my opition the tests are somewhat misleading. It should take that into consideration. See this https://github.com/richardtallent/RT.Comb/issues/5 for some interesting details.
 
-## Results (Localdb for now)
+This repo contain the same test as in the original article but two Comb Guid implementations:
 
-|                                     | C# Guid | SQL NewSequentialId (Default) | UuidCreateSequential | Custom Comb Guid |
+- One simple version which uses Span<T>
+- [RT.Comb](https://github.com/richardtallent/RT.Comb)  
+  
+The goal is to run the same type of benchmark as in the article so we can find out how good or bad it performs.
+
+The RT.Comb implementation used uses a feature where the time portion will never repeat. The library keeps some state about the last generated GUID and in case one was generated too fast and the date/time will be the same, it adds 4ms making it "unique" again.
+
+The custom implementation of the Comb Guid present here does not account for this at the moment.
+
+## Results
+
+### Environment:
+
+- SQL Server (mcr.microsoft.com/mssql/server) on a local Linux container
+- CPU: Intel Core i7-8750H 2.20GHz
+- RAM: 16GB
+- Sansung 970 EVO NVMe
+
+|                                     | Identity | C# Guid | Custom Comb Guid | RT.Comb (Utc No repeat) |
 |-------------------------------------|---------|-------------------------------|----------------------|------------------|
-| Fragmentation % Clustered Index     | 99.3    | 0.8                           | 11.45                | 52.28            |
-| Fragmentation % Non-Clustered Index | 99.29   | 1.77                          | 11.25                | 50.19            |
+|Avg Fragmentation % Clustered Index|0,436|99,313|6,756|4,473|
 
-The custom comb guid implementation here is a bit better than the one in the article but still causes fragmentation.
 
+### Environment:
+
+- SQL Server LocalDB
+- CPU: Intel Core i7-8750H 2.20GHz
+- RAM: 16GB
+- Sansung 970 EVO NVMe
+
+|                                     | Identity | C# Guid | Custom Comb Guid | RT.Comb (Utc No repeat) |
+|-------------------------------------|---------|-------------------------------|----------------------|------------------|
+|Avg Fragmentation % Clustered Index|6,767|99,266|32,419|3,459|
 
   
-
+For some reason, the Custom Comb Guid when on SQL LocalDB performs worse. 🤷‍♂️
