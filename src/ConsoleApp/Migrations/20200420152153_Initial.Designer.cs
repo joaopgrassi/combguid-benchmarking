@@ -10,24 +10,21 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace ConsoleApp.Migrations
 {
     [DbContext(typeof(CombGuidDbContext))]
-    [Migration("20191224171000_Init")]
-    partial class Init
+    [Migration("20200420152153_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "3.1.0")
+                .HasAnnotation("ProductVersion", "3.1.3")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-            modelBuilder.Entity("ConsoleApp.Entities.TableWithExtendedUuidCreateSequential", b =>
+            modelBuilder.Entity("ConsoleApp.Entities.TableWithCombGuid", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("AnotherId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Value")
@@ -37,22 +34,17 @@ namespace ConsoleApp.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AnotherId", "Value");
+                    b.HasIndex("Value");
 
-                    b.ToTable("TableWithExtendedUuidCreateSequential");
+                    b.ToTable("TableWithCombGuid");
                 });
 
-            modelBuilder.Entity("ConsoleApp.Entities.TableWithNewSequentialIdAsDefault", b =>
+            modelBuilder.Entity("ConsoleApp.Entities.TableWithIdentity", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasDefaultValueSql("NewSequentialId()");
-
-                    b.Property<Guid>("AnotherId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasDefaultValueSql("NewSequentialId()");
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
                     b.Property<string>("Value")
                         .IsRequired()
@@ -61,9 +53,27 @@ namespace ConsoleApp.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AnotherId", "Value");
+                    b.HasIndex("Value");
 
-                    b.ToTable("TableWithNewSequentialIdAsDefault");
+                    b.ToTable("TableWithIdentity");
+                });
+
+            modelBuilder.Entity("ConsoleApp.Entities.TableWithRTCombGuid", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Value")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(400)")
+                        .HasMaxLength(400);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Value");
+
+                    b.ToTable("TableWithRTCombGuid");
                 });
 
             modelBuilder.Entity("ConsoleApp.Entities.TableWithRegularGuid", b =>
@@ -72,9 +82,6 @@ namespace ConsoleApp.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("AnotherId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<string>("Value")
                         .IsRequired()
                         .HasColumnType("nvarchar(400)")
@@ -82,30 +89,9 @@ namespace ConsoleApp.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AnotherId", "Value");
+                    b.HasIndex("Value");
 
                     b.ToTable("TableWithRegularGuid");
-                });
-
-            modelBuilder.Entity("ConsoleApp.Entities.TableWithSpanCustomGuidComb", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("AnotherId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(400)")
-                        .HasMaxLength(400);
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AnotherId", "Value");
-
-                    b.ToTable("TableWithSpanCustomGuidComb");
                 });
 #pragma warning restore 612, 618
         }

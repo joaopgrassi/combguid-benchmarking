@@ -1,6 +1,8 @@
-﻿namespace ConsoleApp.Entities
+﻿using System;
+
+namespace ConsoleApp.Entities
 {
-    public class TableWithRegularGuid : BaseBenchmarkEntity
+    public class TableWithRegularGuid : BaseBenchmarkEntity<Guid>
     {
     }
 }

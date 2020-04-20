@@ -6,17 +6,18 @@ namespace ConsoleApp.EF
 {
     public class CombGuidDbContext : DbContext
     {
-        public DbSet<TableWithRegularGuid> TableWithRegularGuid { get; set; }
-        public DbSet<TableWithNewSequentialIdAsDefault> TableWithNewSequentialIdAsDefault { get; set; }
-        public DbSet<TableWithExtendedUuidCreateSequential> TableWithExtendedUuidCreateSequential { get; set; }
-        public DbSet<TableWithSpanCustomGuidComb> TableWithSpanCustomGuidComb { get; set; }
-        public DbSet<TableWithCustomGuidInSql> TableWithCustomGuidInSql { get; set; }
-        public DbSet<TableWithVbCombGuid> TableWithVbCombGuid { get; set; }
-
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        public CombGuidDbContext(
+             DbContextOptions<CombGuidDbContext> options) : base(options)
         {
-            optionsBuilder.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=CombGuidBenchmark;Trusted_Connection=True;MultipleActiveResultSets=true");
         }
+
+        public DbSet<TableWithIdentity> TableWithIdentity { get; set; } = null!;
+
+        public DbSet<TableWithRegularGuid> TableWithRegularGuid { get; set; } = null!;
+
+        public DbSet<TableWithCombGuid> TableWithCombGuid { get; set; } = null!;
+
+        public DbSet<TableWithRTCombGuid> TableWithRTCombGuid { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

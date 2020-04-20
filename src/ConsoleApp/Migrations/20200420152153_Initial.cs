@@ -3,34 +3,33 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace ConsoleApp.Migrations
 {
-    public partial class Init : Migration
+    public partial class Initial : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "TableWithExtendedUuidCreateSequential",
+                name: "TableWithCombGuid",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
-                    AnotherId = table.Column<Guid>(nullable: false),
                     Value = table.Column<string>(maxLength: 400, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TableWithExtendedUuidCreateSequential", x => x.Id);
+                    table.PrimaryKey("PK_TableWithCombGuid", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "TableWithNewSequentialIdAsDefault",
+                name: "TableWithIdentity",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(nullable: false, defaultValueSql: "NewSequentialId()"),
-                    AnotherId = table.Column<Guid>(nullable: false, defaultValueSql: "NewSequentialId()"),
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Value = table.Column<string>(maxLength: 400, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TableWithNewSequentialIdAsDefault", x => x.Id);
+                    table.PrimaryKey("PK_TableWithIdentity", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -38,7 +37,6 @@ namespace ConsoleApp.Migrations
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
-                    AnotherId = table.Column<Guid>(nullable: false),
                     Value = table.Column<string>(maxLength: 400, nullable: false)
                 },
                 constraints: table =>
@@ -47,52 +45,51 @@ namespace ConsoleApp.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TableWithSpanCustomGuidComb",
+                name: "TableWithRTCombGuid",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(nullable: false),
-                    AnotherId = table.Column<Guid>(nullable: false),
                     Value = table.Column<string>(maxLength: 400, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TableWithSpanCustomGuidComb", x => x.Id);
+                    table.PrimaryKey("PK_TableWithRTCombGuid", x => x.Id);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_TableWithExtendedUuidCreateSequential_AnotherId_Value",
-                table: "TableWithExtendedUuidCreateSequential",
-                columns: new[] { "AnotherId", "Value" });
+                name: "IX_TableWithCombGuid_Value",
+                table: "TableWithCombGuid",
+                column: "Value");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TableWithNewSequentialIdAsDefault_AnotherId_Value",
-                table: "TableWithNewSequentialIdAsDefault",
-                columns: new[] { "AnotherId", "Value" });
+                name: "IX_TableWithIdentity_Value",
+                table: "TableWithIdentity",
+                column: "Value");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TableWithRegularGuid_AnotherId_Value",
+                name: "IX_TableWithRegularGuid_Value",
                 table: "TableWithRegularGuid",
-                columns: new[] { "AnotherId", "Value" });
+                column: "Value");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TableWithSpanCustomGuidComb_AnotherId_Value",
-                table: "TableWithSpanCustomGuidComb",
-                columns: new[] { "AnotherId", "Value" });
+                name: "IX_TableWithRTCombGuid_Value",
+                table: "TableWithRTCombGuid",
+                column: "Value");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "TableWithExtendedUuidCreateSequential");
+                name: "TableWithCombGuid");
 
             migrationBuilder.DropTable(
-                name: "TableWithNewSequentialIdAsDefault");
+                name: "TableWithIdentity");
 
             migrationBuilder.DropTable(
                 name: "TableWithRegularGuid");
 
             migrationBuilder.DropTable(
-                name: "TableWithSpanCustomGuidComb");
+                name: "TableWithRTCombGuid");
         }
     }
 }

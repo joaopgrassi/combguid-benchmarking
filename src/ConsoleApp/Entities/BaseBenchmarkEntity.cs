@@ -2,11 +2,9 @@
 
 namespace ConsoleApp.Entities
 {
-    public abstract class BaseBenchmarkEntity
+    public abstract class BaseBenchmarkEntity<TId> where TId : struct
     {
-        public Guid Id { get; set; }
-
-        public Guid AnotherId { get; set; }
+        public TId Id { get; set; }
 
         public string Value { get; set; }
     }

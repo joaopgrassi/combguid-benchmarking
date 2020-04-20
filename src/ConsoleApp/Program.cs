@@ -2,8 +2,10 @@
 using ConsoleApp.Entities;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using RT.Comb;
 using System;
 using System.Data;
+using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,51 +16,48 @@ namespace ConsoleApp
     /// <summary>
     /// This is based on this Benchmark/Test
     /// http://microsoftprogrammers.jebarson.com/benchmarking-index-fragmentation-with-popular-sequential-guid-algorithms/
-    /// I wanted to test an alternate version of the famous "NHibernate" CombGuid generation and see if there's any
-    /// improvements in index fragmentation <see cref="CombGuid"/>
     /// </summary>
     class Program
     {
+        private static Random randomMil = new Random();
+        private static UtcNoRepeatTimestampProvider NoDupeProvider = new UtcNoRepeatTimestampProvider();
+        private static string _connectionString = "Server=localhost,1433;Database=CombGuidBenchmark;User=sa;Password=Your_password123";
+
+        private static ICombProvider SqlNoRepeatCombs = new SqlCombProvider(new SqlDateTimeStrategy(), customTimestampProvider: NoDupeProvider.GetTimestamp);
+
         static async Task Main(string[] args)
         {
             await MigrateDatabase();
 
-            DateTime startTime = DateTime.Now;
+            Stopwatch watch;
 
-            Console.WriteLine($"Starting Option 1");
-            await InsertDataToTestTable<TableWithRegularGuid>(Guid.NewGuid);
-            Console.WriteLine($"Completed in {(DateTime.Now - startTime).TotalSeconds}s");
+            Console.WriteLine($"Starting Option 1 - Identity");
+            watch = Stopwatch.StartNew();
+            await InsertDataToTestTable<TableWithIdentity, int>();
+            Console.WriteLine($"Inserted 1_000_000 rows in {watch.Elapsed.TotalSeconds} seconds");
 
-            Console.WriteLine($"Starting Option 2");
-            startTime = DateTime.Now;
-            await InsertDataToTestTable<TableWithNewSequentialIdAsDefault>();
-            Console.WriteLine($"Completed in {(DateTime.Now - startTime).TotalSeconds}s");
+            Console.WriteLine($"Starting Option 2 - Normal C# Guid");
+            watch = Stopwatch.StartNew();
+            await InsertDataToTestTable<TableWithRegularGuid, Guid>(Guid.NewGuid);
+            Console.WriteLine($"Inserted 1_000_000 rows in {watch.Elapsed.TotalSeconds} seconds");
 
-            Console.WriteLine($"Starting Option 3");
-            startTime = DateTime.Now;
-            await InsertDataToTestTable<TableWithExtendedUuidCreateSequential>(SQLGuidUtil.NewSequentialId);
-            Console.WriteLine($"Completed in {(DateTime.Now - startTime).TotalSeconds}s");
+            Console.WriteLine($"Starting Option 3 - CombGuid");
+            watch = Stopwatch.StartNew();
+            await InsertDataToTestTable<TableWithCombGuid, Guid>(CombGuid.NewCombGuid);
+            Console.WriteLine($"Inserted 1_000_000 rows in {watch.Elapsed.TotalSeconds} seconds");
 
-            Console.WriteLine($"Starting Option 4");
-            startTime = DateTime.Now;
-            await InsertDataToTestTable<TableWithSpanCustomGuidComb>(CombGuid.NewCombGuid);
-            Console.WriteLine($"Completed in {(DateTime.Now - startTime).TotalSeconds}s");
-
-            Console.WriteLine($"Starting Option 5");
-            startTime = DateTime.Now;
-            await InsertDataToTestTable<TableWithCustomGuidInSql>();
-            Console.WriteLine($"Completed in {(DateTime.Now - startTime).TotalSeconds}s");
-
-            Console.WriteLine($"Starting Option 6");
-            startTime = DateTime.Now;
-            await InsertDataToTestTable<TableWithVbCombGuid>(VBGuidApp.VbCombGuid.GetNewID);
-            Console.WriteLine($"Completed in {(DateTime.Now - startTime).TotalSeconds}s");
+            Console.WriteLine($"Starting Option 4 - RT.Comb - UtcNoRepeat");
+            watch = Stopwatch.StartNew();
+            await InsertDataToTestTable<TableWithRTCombGuid, Guid>(SqlNoRepeatCombs.Create);
+            Console.WriteLine($"Inserted 1_000_000 rows in {watch.Elapsed.TotalSeconds} seconds");
 
             Console.ReadLine();
         }
 
-        private static async Task InsertDataToTestTable<TEntity>(Func<Guid> guidGeneratorFunc = null)
-            where TEntity : BaseBenchmarkEntity
+        private static async Task InsertDataToTestTable<TEntity, TId>(
+            Func<Guid>? guidGeneratorFunc = null, Func<Task>? delayStrategy = null)
+            where TEntity : BaseBenchmarkEntity<TId>
+            where TId : struct
         {
             var tableName = typeof(TEntity).Name;
 
@@ -69,21 +68,26 @@ namespace ConsoleApp
             for (int stepIndex = 0; stepIndex < numberOfSteps; stepIndex++)
             {
                 var commandText = new StringBuilder($"INSERT INTO {tableName} (");
-                commandText.Append(guidGeneratorFunc == null ? string.Empty : " Id, AnotherId, ");
+                commandText.Append(guidGeneratorFunc == null ? string.Empty : " Id, ");
                 commandText.Append("[Value] ) VALUES");
 
                 Random rnd = new Random(stepIndex);
 
-                for (int recordIndex = 0; recordIndex < numberOfRecords / numberOfSteps; recordIndex++)
+                for (var recordIndex = 0; recordIndex < numberOfRecords / numberOfSteps; recordIndex++)
                 {
                     commandText.Append((recordIndex == 0) ? string.Empty : ",");
                     commandText.Append("(");
-                    commandText.Append(guidGeneratorFunc == null ? string.Empty : $"'{guidGeneratorFunc.Invoke()}', '{guidGeneratorFunc.Invoke()}' , ");
+                    commandText.Append(guidGeneratorFunc == null ? string.Empty : $"'{guidGeneratorFunc.Invoke()}', ");
                     commandText.Append($"'{rnd.Next()}')");
+
+                    if (delayStrategy != null)
+                    {
+                        await delayStrategy();
+                    }
                 }
 
                 // Commit to the database.
-                using (SqlConnection con = new SqlConnection(@"Server=(localdb)\mssqllocaldb;Database=CombGuidBenchmark;Trusted_Connection=True;MultipleActiveResultSets=true"))
+                using (SqlConnection con = new SqlConnection(_connectionString))
                 {
                     con.Open();
                     using (SqlCommand cmd = new SqlCommand(commandText.ToString(), con))
@@ -92,14 +96,16 @@ namespace ConsoleApp
                         await cmd.ExecuteNonQueryAsync(None);
                     }
                 }
-
-                Console.WriteLine($"{(stepIndex + 1) * 1000} records written to {tableName}");
+                //Console.WriteLine($"{(stepIndex + 1) * 1000} records written to {tableName}");
             }
         }
 
         private static async Task MigrateDatabase()
         {
-            using var context = new CombGuidDbContext();
+            var builder = new DbContextOptionsBuilder<CombGuidDbContext>();
+            builder.UseSqlServer(_connectionString);
+
+            using var context = new CombGuidDbContext(builder.Options);
 
             // will be no-op if db is updated
             await context.Database.MigrateAsync(None);

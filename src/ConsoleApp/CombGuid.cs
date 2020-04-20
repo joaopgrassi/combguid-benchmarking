@@ -22,7 +22,12 @@ namespace ConsoleApp
 
             // Adds the last 6 bytes of a Utc date to the Span (will be the last portion of the Guid)
             var dateBytes = BitConverter.GetBytes(sourceDate.ToBinary()).AsSpan(2, 6);
-            dateBytes.Reverse();
+
+            if (BitConverter.IsLittleEndian)
+            {
+                dateBytes.Reverse();
+            }
+            
             dateBytes.CopyTo(guidSpan.Slice(10));
 
             return new Guid(guidSpan);
