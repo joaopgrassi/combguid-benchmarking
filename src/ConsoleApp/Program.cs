@@ -19,7 +19,6 @@ namespace ConsoleApp
     /// </summary>
     class Program
     {
-        private static Random randomMil = new Random();
         private static UtcNoRepeatTimestampProvider NoDupeProvider = new UtcNoRepeatTimestampProvider();
         private static string _connectionString = "Server=localhost,1433;Database=CombGuidBenchmark;User=sa;Password=Your_password123";
 
@@ -50,6 +49,8 @@ namespace ConsoleApp
             watch = Stopwatch.StartNew();
             await InsertDataToTestTable<TableWithRTCombGuid, Guid>(SqlNoRepeatCombs.Create);
             Console.WriteLine($"Inserted 1_000_000 rows in {watch.Elapsed.TotalSeconds} seconds");
+
+            Console.WriteLine("All done!");
 
             Console.ReadLine();
         }
