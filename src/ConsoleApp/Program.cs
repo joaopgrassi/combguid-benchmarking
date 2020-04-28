@@ -21,14 +21,15 @@ namespace ConsoleApp
     {
         private static readonly UtcNoRepeatTimestampProvider _noDupeProvider = new UtcNoRepeatTimestampProvider();
         
-        // If you want to run with SQL LocalDB, uncomment this line
-        // private static string _connectionString = "Server=localhost,1433;Database=CombGuidBenchmark;User=sa;Password=Your_password123";
-        
         // By default it will try to connect to SQL Server running on docker.
         // Make sure to run docker-compose up before starting the app
-        private static string _connectionString = @"Server=(localdb)\mssqllocaldb;Database=CombGuidBenchmark;Trusted_Connection=True;MultipleActiveResultSets=true";
+        private static string _connectionString = "Server=localhost,1433;Database=CombGuidBenchmark;User=sa;Password=Your_password123";
 
-        private static readonly ICombProvider _sqlNoRepeatCombs = new SqlCombProvider(new SqlDateTimeStrategy(), customTimestampProvider: _noDupeProvider.GetTimestamp);
+        // If you want to run with SQL LocalDB, uncomment this line
+        // private static string _connectionString = @"Server=(localdb)\mssqllocaldb;Database=CombGuidBenchmark;Trusted_Connection=True;MultipleActiveResultSets=true";
+
+        private static readonly ICombProvider _sqlNoRepeatCombs = 
+            new SqlCombProvider(new SqlDateTimeStrategy(), customTimestampProvider: _noDupeProvider.GetTimestamp);
 
         static async Task Main(string[] args)
         {
