@@ -51,3 +51,11 @@ The custom implementation of the Comb Guid present here does not account for thi
 
   
 For some reason the Custom Comb Guid when on SQL LocalDB performs worse. 🤷‍♂️
+
+## Running the app
+
+The app is just a .NET Core Console app. It needs a database and the app is prepared to use SQL Server running on docker. If you don't want to use Docker you can also use SQL LocalDB. Just uncomment the connection string in `Program.cs`. 
+
+1. Docker installed and .NET Core SDK 3.1+
+2. `docker-compose up`
+3. `dotnet run` (OR debug with your favorite IDE)
