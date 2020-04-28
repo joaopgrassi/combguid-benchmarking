@@ -17,9 +17,9 @@ namespace ConsoleApp
     /// This is based on this Benchmark/Test
     /// http://microsoftprogrammers.jebarson.com/benchmarking-index-fragmentation-with-popular-sequential-guid-algorithms/
     /// </summary>
-    class Program
+    static class Program
     {
-        private static UtcNoRepeatTimestampProvider NoDupeProvider = new UtcNoRepeatTimestampProvider();
+        private static readonly UtcNoRepeatTimestampProvider _noDupeProvider = new UtcNoRepeatTimestampProvider();
         
         // If you want to run with SQL LocalDB, uncomment this line
         // private static string _connectionString = "Server=localhost,1433;Database=CombGuidBenchmark;User=sa;Password=Your_password123";
@@ -28,36 +28,33 @@ namespace ConsoleApp
         // Make sure to run docker-compose up before starting the app
         private static string _connectionString = @"Server=(localdb)\mssqllocaldb;Database=CombGuidBenchmark;Trusted_Connection=True;MultipleActiveResultSets=true";
 
-        private static ICombProvider SqlNoRepeatCombs = new SqlCombProvider(new SqlDateTimeStrategy(), customTimestampProvider: NoDupeProvider.GetTimestamp);
+        private static readonly ICombProvider _sqlNoRepeatCombs = new SqlCombProvider(new SqlDateTimeStrategy(), customTimestampProvider: _noDupeProvider.GetTimestamp);
 
         static async Task Main(string[] args)
         {
             await MigrateDatabase();
 
-            Stopwatch watch;
-
-            Console.WriteLine($"Starting Option 1 - Identity");
-            watch = Stopwatch.StartNew();
+            Console.WriteLine("Starting Option 1 - Identity");
+            var watch = Stopwatch.StartNew();
             await InsertDataToTestTable<TableWithIdentity, int>();
-            Console.WriteLine($"Inserted 1_000_000 rows in {watch.Elapsed.TotalSeconds} seconds");
+            Console.WriteLine($"Identity - Inserted 1_000_000 rows in {watch.Elapsed.TotalSeconds} seconds");
 
-            Console.WriteLine($"Starting Option 2 - Normal C# Guid");
+            Console.WriteLine("Starting Option 2 - Normal C# Guid");
             watch = Stopwatch.StartNew();
             await InsertDataToTestTable<TableWithRegularGuid, Guid>(Guid.NewGuid);
-            Console.WriteLine($"Inserted 1_000_000 rows in {watch.Elapsed.TotalSeconds} seconds");
+            Console.WriteLine($"C# Guid - Inserted 1_000_000 rows in {watch.Elapsed.TotalSeconds} seconds");
 
-            Console.WriteLine($"Starting Option 3 - CombGuid");
+            Console.WriteLine("Starting Option 3 - CombGuid");
             watch = Stopwatch.StartNew();
             await InsertDataToTestTable<TableWithCombGuid, Guid>(CombGuid.NewCombGuid);
-            Console.WriteLine($"Inserted 1_000_000 rows in {watch.Elapsed.TotalSeconds} seconds");
+            Console.WriteLine($"CombGuid - Inserted 1_000_000 rows in {watch.Elapsed.TotalSeconds} seconds");
 
-            Console.WriteLine($"Starting Option 4 - RT.Comb - UtcNoRepeat");
+            Console.WriteLine("Starting Option 4 - RT.Comb - UtcNoRepeat");
             watch = Stopwatch.StartNew();
-            await InsertDataToTestTable<TableWithRTCombGuid, Guid>(SqlNoRepeatCombs.Create);
-            Console.WriteLine($"Inserted 1_000_000 rows in {watch.Elapsed.TotalSeconds} seconds");
+            await InsertDataToTestTable<TableWithRTCombGuid, Guid>(_sqlNoRepeatCombs.Create);
+            Console.WriteLine($"RT.Comb - UtcNoRepeat - Inserted 1_000_000 rows in {watch.Elapsed.TotalSeconds} seconds");
 
             Console.WriteLine("All done!");
-
             Console.ReadLine();
         }
 
@@ -68,11 +65,11 @@ namespace ConsoleApp
         {
             var tableName = typeof(TEntity).Name;
 
-            int numberOfRecords = 1000000;
-            int numberOfSteps = numberOfRecords / 1000;
+            var numberOfRecords = 1_000_000;
+            var numberOfSteps = numberOfRecords / 1000;
 
             // Split to batch of 1000 records.
-            for (int stepIndex = 0; stepIndex < numberOfSteps; stepIndex++)
+            for (var stepIndex = 0; stepIndex < numberOfSteps; stepIndex++)
             {
                 var commandText = new StringBuilder($"INSERT INTO {tableName} (");
                 commandText.Append(guidGeneratorFunc == null ? string.Empty : " Id, ");
@@ -82,7 +79,7 @@ namespace ConsoleApp
 
                 for (var recordIndex = 0; recordIndex < numberOfRecords / numberOfSteps; recordIndex++)
                 {
-                    commandText.Append((recordIndex == 0) ? string.Empty : ",");
+                    commandText.Append(recordIndex == 0 ? string.Empty : ",");
                     commandText.Append("(");
                     commandText.Append(guidGeneratorFunc == null ? string.Empty : $"'{guidGeneratorFunc.Invoke()}', ");
                     commandText.Append($"'{rnd.Next()}')");
@@ -94,15 +91,14 @@ namespace ConsoleApp
                 }
 
                 // Commit to the database.
-                using (SqlConnection con = new SqlConnection(_connectionString))
+                await using SqlConnection con = new SqlConnection(_connectionString);
+                con.Open();
+                await using SqlCommand cmd = new SqlCommand(commandText.ToString(), con)
                 {
-                    con.Open();
-                    using (SqlCommand cmd = new SqlCommand(commandText.ToString(), con))
-                    {
-                        cmd.CommandType = CommandType.Text;
-                        await cmd.ExecuteNonQueryAsync(None);
-                    }
-                }
+                    CommandType = CommandType.Text
+                };
+                await cmd.ExecuteNonQueryAsync(None);
+
                 //Console.WriteLine($"{(stepIndex + 1) * 1000} records written to {tableName}");
             }
         }
@@ -112,7 +108,7 @@ namespace ConsoleApp
             var builder = new DbContextOptionsBuilder<CombGuidDbContext>();
             builder.UseSqlServer(_connectionString);
 
-            using var context = new CombGuidDbContext(builder.Options);
+            await using var context = new CombGuidDbContext(builder.Options);
 
             // will be no-op if db is updated
             await context.Database.MigrateAsync(None);
